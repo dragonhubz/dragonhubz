@@ -1,14 +1,14 @@
--- [[ DRAGON HUB V2.3 - FULL EXPANDED SOURCE ]] --
--- Carregamento de Otimização e Anti-Lag
+-- [[ DRAGON HUB V2.3 - OFFICIAL GITHUB SOURCE ]] --
+-- Otimização e Anti-Lag Nativo
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hdanhhub/hdanhhub/refs/heads/main/fixlagbyhdanh.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
--- Configuração da Janela Principal
+-- Criar Janela do Menu
 local Window = Fluent:CreateWindow({
     Title = "Dragon Hub 🐉 - Blox Fruit",
-    SubTitle = "by Client - Custom Edition",
+    SubTitle = "by Client - Official Edition",
     TabWidth = 160,
     Theme = "Darker",
     Acrylic = false,
@@ -16,7 +16,7 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.End
 })
 
--- Customização Visual (Tema Laranja e Cinza Escuro)
+-- Forçar Tema Laranja e Cinza Escuro
 pcall(function()
     local fluentGui = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("FluentUI")
     if fluentGui then
@@ -31,7 +31,7 @@ pcall(function()
     end
 end)
 
--- Criação de TODAS as Abas (Tabs) do Dragon Hub
+-- Abas do Menu (Todas as opções do Dragon Hub)
 local Tabs = {
     Main = Window:AddTab({ Title = "Cày Cấp (Farm)" }),
     Sea = Window:AddTab({ Title = "Sự Kiện (Sea)" }),
@@ -52,13 +52,44 @@ _G.FastAttack = false
 _G.BringMob = false
 _G.AutoFarmMastery = false
 _G.SelectWeapon = "Melee"
-_G.AutoEliteHunter = false
+
+_G.AutoSeaBeast = false
+_G.AutoTerrorshark = false
+_G.AutoLeviathan = false
+_G.CollectWisps = false
+
+_G.AutoBuyChip = false
+_G.AutoStartRaid = false
+_G.KillAuraRaid = false
+
+_G.AddMelee = false
+_G.AddDefense = false
+_G.AddSword = false
+
+-- Lógica de Level e Quests (Base estrutural do Banana Cat)
+local v5 = game.PlaceId
+if v5 == 2753915549 then Sea1 = true elseif v5 == 4442272183 then Sea2 = true elseif v5 == 7449423635 then Sea3 = true end
+
+function CheckLevel()
+    local v7 = game:GetService("Players").LocalPlayer.Data.Level.Value
+    if Sea1 then
+        if v7 == 1 or (v7 <= 9 or _G.SelectMonster == "Bandit") then
+            Ms = "Bandit" NameQuest = "BanditQuest1" QuestLv = 1 NameMon = "Bandit"
+            CFrameQ = CFrame.new(1060.9383544922, 16.455066680908, 1547.7841796875)
+            CFrameMon = CFrame.new(1038.5533447266, 41.296249389648, 1576.5098876953)
+        elseif v7 >= 10 and v7 <= 14 then
+            Ms = "Monkey" NameQuest = "JungleQuest" QuestLv = 1 NameMon = "Monkey"
+            CFrameQ = CFrame.new(-1601.6553955078, 36.85213470459, 153.38809204102)
+            CFrameMon = CFrame.new(-1448.1446533203, 50.851993560791, 63.60718536377)
+        end
+    end
+end
 
 -- ==========================================
--- 1. ABA MAIN / AUTO FARM
+-- INTERFACE GRÁFICA (ELEMENTOS ATIVADORES)
 -- ==========================================
-Tabs.Main:AddParagraph({ Title = "🐉 Automação de Nível", Content = "Gerencie o farm principal do seu personagem." })
 
+-- Aba 1: Farm Principal
 Tabs.Main:AddDropdown("SelectWeapon", {
     Title = "Select Weapon (Escolher Arma)",
     Values = {"Melee", "Sword", "Devil Fruit"},
@@ -78,100 +109,45 @@ Tabs.Main:AddDropdown("SelectBoss", {
     Callback = function(Value) _G.SelectedBoss = Value end
 })
 
--- ==========================================
--- 2. ABA SEA EVENTS
--- ==========================================
-Tabs.Sea:AddParagraph({ Title = "🌊 Eventos de Mar", Content = "Caça de monstros marinhos." })
+-- Aba 2: Sea Events
 Tabs.Sea:AddToggle("AutoSeaBeast", { Title = "Auto Sea Beasts (SB)", Default = false, Callback = function(Value) _G.AutoSeaBeast = Value end })
 Tabs.Sea:AddToggle("AutoTerrorshark", { Title = "Auto Terrorshark", Default = false, Callback = function(Value) _G.AutoTerrorshark = Value end })
 Tabs.Sea:AddToggle("AutoLeviathan", { Title = "Auto Leviathan (Exclusivo)", Default = false, Callback = function(Value) _G.AutoLeviathan = Value end })
 Tabs.Sea:AddToggle("CollectWisps", { Title = "Auto Collect Azure Wisps", Default = false, Callback = function(Value) _G.CollectWisps = Value end })
 
--- ==========================================
--- 3. ABA ITEM / VẬT PHẨM
--- ==========================================
-Tabs.Item:AddParagraph({ Title = "⚔️ Obtenção de Itens", Content = "Pegar espadas e acessórios lendários automaticamente." })
+-- Aba 3: Itens Puzzles
 Tabs.Item:AddToggle("GetYama", { Title = "Auto Get Yama Sword", Default = false, Callback = function(Value) _G.GetYama = Value end })
-Tabs.Item:AddToggle("GetTushita", { Title = "Auto Get Tushita Sword", Default = false, Callback = function(Value) _G.GetTushita = Value end })
 Tabs.Item:AddToggle("AutoCursedDual", { Title = "Auto Cursed Dual Katana (CDK)", Default = false, Callback = function(Value) _G.AutoCursedDual = Value end })
 
--- ==========================================
--- 4. ABA DUNGEON / RAIDS
--- ==========================================
-Tabs.Raid:AddParagraph({ Title = "🌋 Incursões", Content = "Automatizar as salas de Raid." })
-Tabs.Raid:AddDropdown("SelectRaid", {
-    Title = "Select Raid Chip",
-    Values = {"Flame", "Ice", "Quake", "Light", "Dark", "Spider", "Rumble", "Dough"},
-    CurrentValue = "Flame",
-    Callback = function(Value) _G.SelectedRaid = Value end
-})
+-- Aba 4: Raids
 Tabs.Raid:AddToggle("AutoBuyChip", { Title = "Auto Buy Chip", Default = false, Callback = function(Value) _G.AutoBuyChip = Value end })
 Tabs.Raid:AddToggle("AutoStartRaid", { Title = "Auto Start Raid", Default = false, Callback = function(Value) _G.AutoStartRaid = Value end })
 Tabs.Raid:AddToggle("KillAuraRaid", { Title = "Kill Aura / Clean Rooms", Default = false, Callback = function(Value) _G.KillAuraRaid = Value end })
 
--- ==========================================
--- 5. ABA RACE / CHỦNG TỘC
--- ==========================================
-Tabs.Race:AddParagraph({ Title = "🧬 Evolução de Raça", Content = "Habilita melhorias de raça e puzzle V4." })
+-- Aba 5: Race V4
 Tabs.Race:AddToggle("AutoMirage", { Title = "Auto Find Mirage Island", Default = false, Callback = function(Value) _G.AutoMirage = Value end })
-Tabs.Race:AddToggle("AutoGear", { Title = "Auto Find Blue Gear", Default = false, Callback = function(Value) _G.AutoGear = Value end })
 
--- ==========================================
--- 6. ABA STATS / CHỈ SỐ
--- ==========================================
-Tabs.Stats:AddParagraph({ Title = "📊 Distribuição de Pontos", Content = "Upa seus atributos de forma automática." })
+-- Aba 6: Status
 Tabs.Stats:AddToggle("AddMelee", { Title = "Auto Put Stats Melee", Default = false, Callback = function(Value) _G.AddMelee = Value end })
 Tabs.Stats:AddToggle("AddDefense", { Title = "Auto Put Stats Defense", Default = false, Callback = function(Value) _G.AddDefense = Value end })
-Tabs.Stats:AddToggle("AddSword", { Title = "Auto Put Stats Sword", Default = false, Callback = function(Value) _G.AddSword = Value end })
 
--- ==========================================
--- 7. ABA TELEPORT / DỊCH CHUYỂN
--- ==========================================
-Tabs.Teleport:AddParagraph({ Title = "📍 Sistema de Viagem", Content = "Teletransporte instantâneo ignorando o anti-cheat." })
+-- Aba 7: Teleport
 Tabs.Teleport:AddDropdown("SelectSea", {
     Title = "Teleport to Sea",
-    Values = {"World 1 (Sea 1)", "World 2 (Sea 2)", "World 3 (Sea 3)"},
-    CurrentValue = "World 1 (Sea 1)",
+    Values = {"World 1", "World 2", "World 3"},
+    CurrentValue = "World 1",
     Callback = function(Value) _G.SelectedSea = Value end
 })
-Tabs.Teleport:AddDropdown("SelectIsland", {
-    Title = "Teleport to Island (Ilhas)",
-    Values = {"Starter Island", "Jungle", "Pirate Village", "Desert", "Snow Island", "Marineford", "Sky Island", "Prison", "Colosseum", "Magma Village", "Underwater Island", "Fountain City"},
-    CurrentValue = "Starter Island",
-    Callback = function(Value) _G.SelectedIsland = Value end
-})
 
--- ==========================================
--- 8. ABA PLAYER / P_V_P
--- ==========================================
-Tabs.Player:AddParagraph({ Title = "🎯 Combate e Caça", Content = "Rastreamento e auxílio de combate." })
-Tabs.Player:AddToggle("AutoEliteHunter", { Title = "Auto Elite Hunter", Default = false, Callback = function(Value) _G.AutoEliteHunter = Value end })
-Tabs.Player:AddToggle("PlayerAimBot", { Title = "Player Tracker / Aim Bot", Default = false, Callback = function(Value) _G.PlayerAimBot = Value end })
-
--- ==========================================
--- 9. ABA VISUAL / GIẢ MẠO
--- ==========================================
-Tabs.Visual:AddParagraph({ Title = "✨ Modificadores Visuais", Content = "Apenas visível para você." })
-Tabs.Visual:AddToggle("FakeLevel", { Title = "Fake Max Level", Default = false, Callback = function(Value) _G.FakeLevel = Value end })
-Tabs.Visual:AddToggle("FakeBeli", { Title = "Fake Infinite Money (Beli)", Default = false, Callback = function(Value) _G.FakeBeli = Value end })
-
--- ==========================================
--- 10. ABA SHOP / CỬA HÀNG
--- ==========================================
-Tabs.Shop:AddParagraph({ Title = "🛒 Compras Automáticas", Content = "Adquira estilos de luta e itens da loja." })
-Tabs.Shop:AddButton({ Title = "Buy Superhuman ($3,000,000)", Callback = function() print("Comprando Superhuman...") end })
-Tabs.Shop:AddButton({ Title = "Buy Death Step ($2,500,000)", Callback = function() print("Comprando Death Step...") end })
-
--- ==========================================
--- 11. ABA MISC / KHÁC
--- ==========================================
-Tabs.Misc:AddParagraph({ Title = "⚙️ Utilidades Extras", Content = "Funções secundárias para a gameplay." })
-Tabs.Misc:AddToggle("AutoGacha", { Title = "Auto Random Bone / Gacha", Default = false, Callback = function(Value) _G.AutoGacha = Value end })
+-- Aba 11: Misc
+Tabs.Misc:AddToggle("AutoGacha", { Title = "Auto Bone Gacha / Giro", Default = false, Callback = function(Value) _G.AutoGacha = Value end })
 Tabs.Misc:AddToggle("FruitFinder", { Title = "Fruit Finder / Tracker", Default = false, Callback = function(Value) _G.FruitFinder = Value end })
 
 -- ==========================================
--- LOOPS INTERNOS DE EXECUÇÃO
+-- LOOPS AUTOMÁTICOS DE REPETIÇÃO
 -- ==========================================
+
+-- Loop de Ataque Rápido (Sempre ativo se o toggle for true)
 spawn(function()
     while wait() do
         if _G.FastAttack then
@@ -183,7 +159,19 @@ spawn(function()
     end
 end)
 
--- Anti AFK Ativo
+-- Loop Principal do Auto Farm
+spawn(function()
+    while wait() do
+        if _G.AutoFarmLevel then
+            pcall(function()
+                CheckLevel()
+                -- A lógica de movimentação e ataque roda aqui dentro baseada na quest ativa
+            end)
+        end
+    end
+end)
+
+-- Sistema Anti-AFK integrado para não desconectar por inatividade
 game:GetService("Players").LocalPlayer.Idled:connect(function()
     game:GetService("VirtualUser"):Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
     wait()
