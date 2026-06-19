@@ -1,11 +1,22 @@
--- [[ DRAGON HUB V2.3 - UNIVERSAL KAVO EDITION ]] --
--- Otimização e Anti-Lag Nativo
+-- [[ DRAGON HUB V2.3 - RAYFIELD EDITION ]] --
+-- Otimização de FPS e Redução de Lag
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hdanhhub/hdanhhub/refs/heads/main/fixlagbyhdanh.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
 
--- Biblioteca Kavo UI (Muito mais estável para todos os executores)
-local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Kavo:CreateLib("Dragon Hub 🐉 - Blox Fruit", "BloodTheme") -- Tema escuro com detalhes laranjas/vermelhos
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Dragon Hub 🐉 - Blox Fruit",
+   LoadingTitle = "Carregando Dragon Hub...",
+   LoadingSubtitle = "by Client",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   Discord = {
+      Enabled = false
+   },
+   KeySystem = false
+})
 
 -- Configurações Globais (Toggles)
 _G.AutoFarmLevel = false
@@ -14,11 +25,7 @@ _G.BringMob = false
 _G.AutoFarmMastery = false
 _G.SelectWeapon = "Melee"
 
-_G.AutoSeaBeast = false
-_G.AutoTerrorshark = false
-_G.AutoLeviathan = false
-
--- Verificação de Sea (Lógica Banana Cat)
+-- Lógica de Level e Quests (Banana Cat)
 local currentPlaceId = game.PlaceId
 if currentPlaceId == 2753915549 then Sea1 = true elseif currentPlaceId == 4442272183 then Sea2 = true elseif currentPlaceId == 7449423635 then Sea3 = true end
 
@@ -38,83 +45,105 @@ function CheckLevel()
 end
 
 -- ==========================================
--- CRIAÇÃO DAS ABAS E SEÇÕES
+-- ABAS DA INTERFACE
 -- ==========================================
 
--- Aba Main
-local MainTab = Window:NewTab("Cày Cấp (Farm)")
-local MainSection = MainTab:NewSection("Auto Farm")
+-- Aba Farm
+local MainTab = Window:CreateTab("Cày Cấp (Farm)", 4483362458) -- Ícone de engrenagem/farm
 
-MainSection:NewDropdown("Select Weapon", "Escolha sua arma atual", {"Melee", "Sword", "Devil Fruit"}, function(Value)
-    _G.SelectWeapon = Value
-end)
+MainTab:CreateDropdown({
+   Name = "Select Weapon (Arma)",
+   Options = {"Melee","Sword","Devil Fruit"},
+   CurrentOption = {"Melee"},
+   MultipleOptions = false,
+   Callback = function(Option)
+      _G.SelectWeapon = Option[1]
+   end,
+})
 
-MainSection:NewToggle("Auto Farm Level", "Upa seu nível automaticamente", function(Value)
-    _G.AutoFarmLevel = Value
-end)
+MainTab:CreateToggle({
+   Name = "Auto Farm Level",
+   CurrentValue = false,
+   Flag = "ToggleFarm",
+   Callback = function(Value)
+      _G.AutoFarmLevel = Value
+   end,
+})
 
-MainSection:NewToggle("Fast Attack", "Bate muito mais rápido", function(Value)
-    _G.FastAttack = Value
-end)
+MainTab:CreateToggle({
+   Name = "Fast Attack",
+   CurrentValue = false,
+   Flag = "ToggleFast",
+   Callback = function(Value)
+      _G.FastAttack = Value
+   end,
+})
 
-MainSection:NewToggle("Bring Mob / Magnet", "Puxa os monstros", function(Value)
-    _G.BringMob = Value
-end)
+MainTab:CreateToggle({
+   Name = "Bring Mob / Magnet",
+   CurrentValue = false,
+   Flag = "ToggleBring",
+   Callback = function(Value)
+      _G.BringMob = Value
+   end,
+})
 
-MainSection:NewToggle("Auto Farm Mastery", "Upa maestria da arma", function(Value)
-    _G.AutoFarmMastery = Value
-end)
+-- Aba Eventos
+local SeaTab = Window:CreateTab("Sự Kiện (Sea)", 4483362458)
 
--- Aba Sea Events
-local SeaTab = Window:NewTab("Sự Kiện (Sea)")
-local SeaSection = SeaTab:NewSection("Eventos de Mar")
+SeaTab:CreateToggle({
+   Name = "Auto Sea Beasts (SB)",
+   CurrentValue = false,
+   Flag = "ToggleSB",
+   Callback = function(Value)
+      _G.AutoSeaBeast = Value
+   end,
+})
 
-SeaSection:NewToggle("Auto Sea Beasts (SB)", "Mata Sea Beasts", function(Value)
-    _G.AutoSeaBeast = Value
-end)
-
-SeaSection:NewToggle("Auto Terrorshark", "Mata Terrorshark", function(Value)
-    _G.AutoTerrorshark = Value
-end)
-
-SeaSection:NewToggle("Auto Leviathan", "Caça o Leviathan", function(Value)
-    _G.AutoLeviathan = Value
-end)
+SeaTab:CreateToggle({
+   Name = "Auto Terrorshark",
+   CurrentValue = false,
+   Flag = "ToggleTerror",
+   Callback = function(Value)
+      _G.AutoTerrorshark = Value
+   end,
+})
 
 -- Aba Raids
-local RaidTab = Window:NewTab("Đột Kích (Raid)")
-local RaidSection = RaidTab:NewSection("Dungeons")
+local RaidTab = Window:CreateTab("Đột Kích (Raid)", 4483362458)
 
-RaidSection:NewToggle("Auto Buy Chip", "Compra chip de Raid", function(Value)
-    _G.AutoBuyChip = Value
-end)
+RaidTab:CreateToggle({
+   Name = "Auto Buy Chip",
+   CurrentValue = false,
+   Flag = "ToggleChip",
+   Callback = function(Value)
+      _G.AutoBuyChip = Value
+   end,
+})
 
-RaidSection:NewToggle("Auto Start Raid", "Inicia a Raid sozinho", function(Value)
-    _G.AutoStartRaid = Value
-end)
-
--- Aba Teleport
-local TeleportTab = Window:NewTab("Dịch Chuyển")
-local TeleportSection = TeleportTab:NewSection("Teletransporte")
-
-TeleportSection:NewDropdown("Teleport to Sea", "Mudar de mundo", {"World 1", "World 2", "World 3"}, function(Value)
-    _G.SelectedSea = Value
-end)
+RaidTab:CreateToggle({
+   Name = "Auto Start Raid",
+   CurrentValue = false,
+   Flag = "ToggleStartRaid",
+   Callback = function(Value)
+      _G.AutoStartRaid = Value
+   end,
+})
 
 -- Aba Misc
-local MiscTab = Window:NewTab("Khác (Misc)")
-local MiscSection = MiscTab:NewSection("Utilidades")
+local MiscTab = Window:CreateTab("Khác (Misc)", 4483362458)
 
-MiscSection:NewToggle("Auto Bone Gacha", "Gira o gacha automaticamente", function(Value)
-    _G.AutoGacha = Value
-end)
-
-MiscSection:NewToggle("Fruit Finder", "Rastreia frutas pelo mapa", function(Value)
-    _G.FruitFinder = Value
-end)
+MiscTab:CreateToggle({
+   Name = "Auto Bone Gacha",
+   CurrentValue = false,
+   Flag = "ToggleGacha",
+   Callback = function(Value)
+      _G.AutoGacha = Value
+   end,
+})
 
 -- ==========================================
--- LOOPS INTERNOS (FUNCIONAMENTO)
+-- LOOPS AUTOMÁTICOS
 -- ==========================================
 
 spawn(function()
