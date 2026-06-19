@@ -1,59 +1,87 @@
--- [[ DRAGON HUB V2.3 - VERSÃO FINAL ESTÁVEL ]] --
-loadstring(game:HttpGet("https://raw.githubusercontent.com/hdanhhub/hdanhhub/refs/heads/main/fixlagbyhdanh.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
+-- [[ DRAGON HUB V2.3 - INTERFACE NATIVA ANTI-QUEDA ]] --
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local TitleLabel = Instance.new("TextLabel")
+local Container = Instance.new("Frame")
+local Grid = Instance.new("UIGridLayout")
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+ScreenGui.Name = "DragonHubGUI"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
 
-local Window = OrionLib:MakeWindow({
-    Name = "Dragon Hub 🐉 - Blox Fruit", 
-    HidePremium = true, 
-    SaveConfig = false, 
-    IntroText = "Dragon Hub Carregado!"
-})
+-- Janela Principal (Cinza Escuro)
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 400, 0, 250)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
+-- Título (Laranja)
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "  Dragon Hub 🐉 - Blox Fruit"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 115, 0)
+TitleLabel.TextSize = 18
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Container dos Botões
+Container.Name = "Container"
+Container.Parent = MainFrame
+Container.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Container.Position = UDim2.new(0, 10, 0, 50)
+Container.Size = UDim2.new(1, -20, 1, -60)
+
+Grid.Parent = Container
+Grid.CellSize = UDim2.new(0, 180, 0, 40)
+Grid.CellPadding = UDim2.new(0, 10, 0, 10)
+
+-- Configurações das Funções
 _G.AutoFarmLevel = false
 _G.FastAttack = false
 _G.BringMob = false
-_G.SelectWeapon = "Melee"
-
-local v5 = game.PlaceId
-if v5 == 2753915549 then Sea1 = true elseif v5 == 4442272183 then Sea2 = true elseif v5 == 7449423635 then Sea3 = true end
 
 function CheckLevel()
     local userLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
-    if Sea1 then
-        if userLevel == 1 or (userLevel <= 9 or _G.SelectMonster == "Bandit") then
-            Ms = "Bandit" NameQuest = "BanditQuest1" QuestLv = 1 NameMon = "Bandit"
-            CFrameQ = CFrame.new(1060.9383544922, 16.455066680908, 1547.7841796875)
-            CFrameMon = CFrame.new(1038.5533447266, 41.296249389648, 1576.5098876953)
-        elseif userLevel >= 10 and userLevel <= 14 then
-            Ms = "Monkey" NameQuest = "JungleQuest" QuestLv = 1 NameMon = "Monkey"
-            CFrameQ = CFrame.new(-1601.6553955078, 36.85213470459, 153.38809204102)
-            CFrameMon = CFrame.new(-1448.1446533203, 50.851993560791, 63.60718536377)
-        end
+    -- Lógica básica de Quest do Banana Cat
+    if userLevel >= 1 then
+        Ms = "Bandit" NameQuest = "BanditQuest1" QuestLv = 1 NameMon = "Bandit"
     end
 end
 
-local FarmTab = Window:MakeTab({ Name = "Cày Cấp (Farm)", Icon = "rbxassetid://4483362458" })
-local SeaTab = Window:MakeTab({ Name = "Sự Kiện (Sea)", Icon = "rbxassetid://4483362458" })
-local RaidTab = Window:MakeTab({ Name = "Đột Kích (Raid)", Icon = "rbxassetid://4483362458" })
+-- Criador de Botões Ligar/Desligar
+local function AddToggle(name, globalVar)
+    local Button = Instance.new("TextButton")
+    Button.Parent = Container
+    Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Button.Font = Enum.Font.SourceSansBold
+    Button.Text = name .. " [OFF]"
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 14
+    
+    Button.MouseButton1Click:Connect(function()
+        _G[globalVar] = not _G[globalVar]
+        if _G[globalVar] then
+            Button.BackgroundColor3 = Color3.fromRGB(255, 115, 0)
+            Button.Text = name .. " [ON]"
+        else
+            Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Button.Text = name .. " [OFF]"
+        end
+    end)
+end
 
-FarmTab:AddDropdown({
-    Name = "Select Weapon",
-    Default = "Melee",
-    Options = {"Melee", "Sword", "Devil Fruit"},
-    Callback = function(Value) _G.SelectWeapon = Value end    
-})
+-- Adicionando as Funções Principais na Tela
+AddToggle("Auto Farm Level", "AutoFarmLevel")
+AddToggle("Fast Attack", "FastAttack")
+AddToggle("Bring Mob", "BringMob")
 
-FarmTab:AddToggle({ Name = "Auto Farm Level", Default = false, Callback = function(Value) _G.AutoFarmLevel = Value end })
-FarmTab:AddToggle({ Name = "Fast Attack", Default = false, Callback = function(Value) _G.FastAttack = Value end })
-FarmTab:AddToggle({ Name = "Bring Mob / Magnet", Default = false, Callback = function(Value) _G.BringMob = Value end })
-
-SeaTab:AddToggle({ Name = "Auto Sea Beasts (SB)", Default = false, Callback = function(Value) _G.AutoSeaBeast = Value end })
-SeaTab:AddToggle({ Name = "Auto Terrorshark", Default = false, Callback = function(Value) _G.AutoTerrorshark = Value end })
-RaidTab:AddToggle({ Name = "Auto Buy Chip", Default = false, Callback = function(Value) _G.AutoBuyChip = Value end })
-RaidTab:AddToggle({ Name = "Auto Start Raid", Default = false, Callback = function(Value) _G.AutoStartRaid = Value end })
-
+-- Loops de Funcionamento
 spawn(function()
     while true do
         task.wait()
@@ -74,11 +102,3 @@ spawn(function()
         end
     end
 end)
-
-game:GetService("Players").LocalPlayer.Idled:connect(function()
-    game:GetService("VirtualUser"):Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-    task.wait()
-    game:GetService("VirtualUser"):Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-end)
-
-OrionLib:Init()
