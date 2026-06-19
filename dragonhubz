@@ -1,52 +1,13 @@
--- [[ DRAGON HUB V2.3 - SCRIPT OFICIAL INTERNO ]] --
--- Módulos de Otimização de Performance e Redução de Lag
+-- [[ DRAGON HUB V2.3 - UNIVERSAL KAVO EDITION ]] --
+-- Otimização e Anti-Lag Nativo
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hdanhhub/hdanhhub/refs/heads/main/fixlagbyhdanh.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
 
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+-- Biblioteca Kavo UI (Muito mais estável para todos os executores)
+local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Kavo:CreateLib("Dragon Hub 🐉 - Blox Fruit", "BloodTheme") -- Tema escuro com detalhes laranjas/vermelhos
 
--- Inicialização da Janela da Interface Gráfica
-local Window = Fluent:CreateWindow({
-    Title = "Dragon Hub 🐉 - Blox Fruit",
-    SubTitle = "Edição Oficial do Usuário",
-    TabWidth = 160,
-    Theme = "Darker",
-    Acrylic = false,
-    Size = UDim2.fromOffset(580, 460),
-    MinimizeKey = Enum.KeyCode.End
-})
-
--- Customização Visual Automatizada: Tema Laranja com Fundo Escuro
-pcall(function()
-    local fluentGui = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("FluentUI")
-    if fluentGui then
-        for _, obj in pairs(fluentGui:GetDescendants()) do
-            if obj:IsA("Frame") and obj.BackgroundColor3 == Color3.fromRGB(35, 35, 45) then
-                obj.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            end
-            if obj:IsA("TextLabel") and obj.TextColor3 == Color3.fromRGB(0, 255, 255) then
-                obj.TextColor3 = Color3.fromRGB(255, 115, 0)
-            end
-        end
-    end
-end)
-
--- Estruturação das Abas do Menu de Opções
-local Tabs = {
-    Main = Window:AddTab({ Title = "Cày Cấp (Farm)" }),
-    Sea = Window:AddTab({ Title = "Sự Kiện (Sea)" }),
-    Item = Window:AddTab({ Title = "Vật Phẩm (Item)" }),
-    Raid = Window:AddTab({ Title = "Đột Kích (Raid)" }),
-    Race = Window:AddTab({ Title = "Chủng Tộc (Race)" }),
-    Stats = Window:AddTab({ Title = "Chỉ Số (Stats)" }),
-    Teleport = Window:AddTab({ Title = "Dịch Chuyển" }),
-    Player = Window:AddTab({ Title = "Người Chơi (PvP)" }),
-    Visual = Window:AddTab({ Title = "Giả Mạo (Visual)" }),
-    Shop = Window:AddTab({ Title = "Cửa Hàng (Shop)" }),
-    Misc = Window:AddTab({ Title = "Khác (Misc)" })
-}
-
--- Estado Inicial dos Interruptores (Toggles e Seleções Globais)
+-- Configurações Globais (Toggles)
 _G.AutoFarmLevel = false
 _G.FastAttack = false
 _G.BringMob = false
@@ -56,20 +17,11 @@ _G.SelectWeapon = "Melee"
 _G.AutoSeaBeast = false
 _G.AutoTerrorshark = false
 _G.AutoLeviathan = false
-_G.CollectWisps = false
 
-_G.AutoBuyChip = false
-_G.AutoStartRaid = false
-_G.KillAuraRaid = false
-
-_G.AddMelee = false
-_G.AddDefense = false
-
--- Verificação Dinâmica da Instância de Jogo Atual (Identificação de Sea)
+-- Verificação de Sea (Lógica Banana Cat)
 local currentPlaceId = game.PlaceId
 if currentPlaceId == 2753915549 then Sea1 = true elseif currentPlaceId == 4442272183 then Sea2 = true elseif currentPlaceId == 7449423635 then Sea3 = true end
 
--- Mapeamento e Sistema de Verificação de Missões
 function CheckLevel()
     local userLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
     if Sea1 then
@@ -86,68 +38,85 @@ function CheckLevel()
 end
 
 -- ==========================================
--- CONSTRUÇÃO DA INTERFACE GRÁFICA (UI)
+-- CRIAÇÃO DAS ABAS E SEÇÕES
 -- ==========================================
 
--- Aba 1: Evolução Principal (Auto Farm)
-Tabs.Main:AddDropdown("SelectWeapon", {
-    Title = "Select Weapon (Escolher Arma)",
-    Values = {"Melee", "Sword", "Devil Fruit"},
-    CurrentValue = "Melee",
-    Callback = function(Value) _G.SelectWeapon = Value end
-})
+-- Aba Main
+local MainTab = Window:NewTab("Cày Cấp (Farm)")
+local MainSection = MainTab:NewSection("Auto Farm")
 
-Tabs.Main:AddToggle("AutoFarmLevel", { Title = "Auto Farm Level", Default = false, Callback = function(Value) _G.AutoFarmLevel = Value end })
-Tabs.Main:AddToggle("FastAttack", { Title = "Fast Attack (Ataque Rápido)", Default = false, Callback = function(Value) _G.FastAttack = Value end })
-Tabs.Main:AddToggle("BringMob", { Title = "Bring Mob / Magnet", Default = false, Callback = function(Value) _G.BringMob = Value end })
-Tabs.Main:AddToggle("AutoFarmMastery", { Title = "Auto Farm Mastery", Default = false, Callback = function(Value) _G.AutoFarmMastery = Value end })
+MainSection:NewDropdown("Select Weapon", "Escolha sua arma atual", {"Melee", "Sword", "Devil Fruit"}, function(Value)
+    _G.SelectWeapon = Value
+end)
 
-Tabs.Main:AddDropdown("SelectBoss", {
-    Title = "Auto Boss (Selecionar Chefe)",
-    Values = {"Saber Expert", "The Gorilla King", "The Saw", "Don Swan", "Cursed Captain", "Rip Indra", "Dough King"},
-    CurrentValue = "Saber Expert",
-    Callback = function(Value) _G.SelectedBoss = Value end
-})
+MainSection:NewToggle("Auto Farm Level", "Upa seu nível automaticamente", function(Value)
+    _G.AutoFarmLevel = Value
+end)
 
--- Aba 2: Eventos de Mar (Sea Events)
-Tabs.Sea:AddToggle("AutoSeaBeast", { Title = "Auto Sea Beasts (SB)", Default = false, Callback = function(Value) _G.AutoSeaBeast = Value end })
-Tabs.Sea:AddToggle("AutoTerrorshark", { Title = "Auto Terrorshark", Default = false, Callback = function(Value) _G.AutoTerrorshark = Value end })
-Tabs.Sea:AddToggle("AutoLeviathan", { Title = "Auto Leviathan (Exclusivo)", Default = false, Callback = function(Value) _G.AutoLeviathan = Value end })
-Tabs.Sea:AddToggle("CollectWisps", { Title = "Auto Collect Azure Wisps", Default = false, Callback = function(Value) _G.CollectWisps = Value end })
+MainSection:NewToggle("Fast Attack", "Bate muito mais rápido", function(Value)
+    _G.FastAttack = Value
+end)
 
--- Aba 3: Conquista de Itens e Armas
-Tabs.Item:AddToggle("GetYama", { Title = "Auto Get Yama Sword", Default = false, Callback = function(Value) _G.GetYama = Value end })
-Tabs.Item:AddToggle("AutoCursedDual", { Title = "Auto Cursed Dual Katana (CDK)", Default = false, Callback = function(Value) _G.AutoCursedDual = Value end })
+MainSection:NewToggle("Bring Mob / Magnet", "Puxa os monstros", function(Value)
+    _G.BringMob = Value
+end)
 
--- Aba 4: Gerenciamento de Incursões (Raids)
-Tabs.Raid:AddToggle("AutoBuyChip", { Title = "Auto Buy Chip", Default = false, Callback = function(Value) _G.AutoBuyChip = Value end })
-Tabs.Raid:AddToggle("AutoStartRaid", { Title = "Auto Start Raid", Default = false, Callback = function(Value) _G.AutoStartRaid = Value end })
-Tabs.Raid:AddToggle("KillAuraRaid", { Title = "Kill Aura / Clean Rooms", Default = false, Callback = function(Value) _G.KillAuraRaid = Value end })
+MainSection:NewToggle("Auto Farm Mastery", "Upa maestria da arma", function(Value)
+    _G.AutoFarmMastery = Value
+end)
 
--- Aba 5: Desafios e Evolução de Raça (Race V4)
-Tabs.Race:AddToggle("AutoMirage", { Title = "Auto Find Mirage Island", Default = false, Callback = function(Value) _G.AutoMirage = Value end })
+-- Aba Sea Events
+local SeaTab = Window:NewTab("Sự Kiện (Sea)")
+local SeaSection = SeaTab:NewSection("Eventos de Mar")
 
--- Aba 6: Distribuição de Atributos (Stats)
-Tabs.Stats:AddToggle("AddMelee", { Title = "Auto Put Stats Melee", Default = false, Callback = function(Value) _G.AddMelee = Value end })
-Tabs.Stats:AddToggle("AddDefense", { Title = "Auto Put Stats Defense", Default = false, Callback = function(Value) _G.AddDefense = Value end })
+SeaSection:NewToggle("Auto Sea Beasts (SB)", "Mata Sea Beasts", function(Value)
+    _G.AutoSeaBeast = Value
+end)
 
--- Aba 7: Sistema de Teletransporte entre Mundos
-Tabs.Teleport:AddDropdown("SelectSea", {
-    Title = "Teleport to Sea",
-    Values = {"World 1", "World 2", "World 3"},
-    CurrentValue = "World 1",
-    Callback = function(Value) _G.SelectedSea = Value end
-})
+SeaSection:NewToggle("Auto Terrorshark", "Mata Terrorshark", function(Value)
+    _G.AutoTerrorshark = Value
+end)
 
--- Aba 11: Recursos Diversos (Misc)
-Tabs.Misc:AddToggle("AutoGacha", { Title = "Auto Bone Gacha / Giro", Default = false, Callback = function(Value) _G.AutoGacha = Value end })
-Tabs.Misc:AddToggle("FruitFinder", { Title = "Fruit Finder / Rastrear Fruta", Default = false, Callback = function(Value) _G.FruitFinder = Value end })
+SeaSection:NewToggle("Auto Leviathan", "Caça o Leviathan", function(Value)
+    _G.AutoLeviathan = Value
+end)
+
+-- Aba Raids
+local RaidTab = Window:NewTab("Đột Kích (Raid)")
+local RaidSection = RaidTab:NewSection("Dungeons")
+
+RaidSection:NewToggle("Auto Buy Chip", "Compra chip de Raid", function(Value)
+    _G.AutoBuyChip = Value
+end)
+
+RaidSection:NewToggle("Auto Start Raid", "Inicia a Raid sozinho", function(Value)
+    _G.AutoStartRaid = Value
+end)
+
+-- Aba Teleport
+local TeleportTab = Window:NewTab("Dịch Chuyển")
+local TeleportSection = TeleportTab:NewSection("Teletransporte")
+
+TeleportSection:NewDropdown("Teleport to Sea", "Mudar de mundo", {"World 1", "World 2", "World 3"}, function(Value)
+    _G.SelectedSea = Value
+end)
+
+-- Aba Misc
+local MiscTab = Window:NewTab("Khác (Misc)")
+local MiscSection = MiscTab:NewSection("Utilidades")
+
+MiscSection:NewToggle("Auto Bone Gacha", "Gira o gacha automaticamente", function(Value)
+    _G.AutoGacha = Value
+end)
+
+MiscSection:NewToggle("Fruit Finder", "Rastreia frutas pelo mapa", function(Value)
+    _G.FruitFinder = Value
+end)
 
 -- ==========================================
--- ENGENHARIA DE EXECUÇÃO SÍNCRONA (LOOPS)
+-- LOOPS INTERNOS (FUNCIONAMENTO)
 -- ==========================================
 
--- Controle do Loop de Ataque Acelerado
 spawn(function()
     while true do
         task.wait()
@@ -160,24 +129,20 @@ spawn(function()
     end
 end)
 
--- Controle do Loop Principal do Auto Farm
 spawn(function()
     while true do
         task.wait()
         if _G.AutoFarmLevel then
             pcall(function()
                 CheckLevel()
-                -- O algoritmo de processamento de rota é executado sequencialmente aqui
             end)
         end
     end
 end)
 
--- Sistema de Prevenção Anti-Desconexão Involuntária (Anti-AFK)
+-- Anti-AFK
 game:GetService("Players").LocalPlayer.Idled:connect(function()
     game:GetService("VirtualUser"):Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
     task.wait()
     game:GetService("VirtualUser"):Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
-
-Window:SelectTab(Tabs.Main)
