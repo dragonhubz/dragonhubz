@@ -1,14 +1,14 @@
--- [[ DRAGON HUB V2.3 - OFFICIAL GITHUB SOURCE ]] --
--- Otimização e Anti-Lag Nativo
+-- [[ DRAGON HUB V2.3 - SCRIPT OFICIAL INTERNO ]] --
+-- Módulos de Otimização de Performance e Redução de Lag
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hdanhhub/hdanhhub/refs/heads/main/fixlagbyhdanh.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
--- Criar Janela do Menu
+-- Inicialização da Janela da Interface Gráfica
 local Window = Fluent:CreateWindow({
     Title = "Dragon Hub 🐉 - Blox Fruit",
-    SubTitle = "by Client - Official Edition",
+    SubTitle = "Edição Oficial do Usuário",
     TabWidth = 160,
     Theme = "Darker",
     Acrylic = false,
@@ -16,7 +16,7 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.End
 })
 
--- Forçar Tema Laranja e Cinza Escuro
+-- Customização Visual Automatizada: Tema Laranja com Fundo Escuro
 pcall(function()
     local fluentGui = game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("FluentUI")
     if fluentGui then
@@ -31,7 +31,7 @@ pcall(function()
     end
 end)
 
--- Abas do Menu (Todas as opções do Dragon Hub)
+-- Estruturação das Abas do Menu de Opções
 local Tabs = {
     Main = Window:AddTab({ Title = "Cày Cấp (Farm)" }),
     Sea = Window:AddTab({ Title = "Sự Kiện (Sea)" }),
@@ -46,7 +46,7 @@ local Tabs = {
     Misc = Window:AddTab({ Title = "Khác (Misc)" })
 }
 
--- Variáveis de Controle das Opções (Ativar/Desativar)
+-- Estado Inicial dos Interruptores (Toggles e Seleções Globais)
 _G.AutoFarmLevel = false
 _G.FastAttack = false
 _G.BringMob = false
@@ -64,20 +64,20 @@ _G.KillAuraRaid = false
 
 _G.AddMelee = false
 _G.AddDefense = false
-_G.AddSword = false
 
--- Lógica de Level e Quests (Base estrutural do Banana Cat)
-local v5 = game.PlaceId
-if v5 == 2753915549 then Sea1 = true elseif v5 == 4442272183 then Sea2 = true elseif v5 == 7449423635 then Sea3 = true end
+-- Verificação Dinâmica da Instância de Jogo Atual (Identificação de Sea)
+local currentPlaceId = game.PlaceId
+if currentPlaceId == 2753915549 then Sea1 = true elseif currentPlaceId == 4442272183 then Sea2 = true elseif currentPlaceId == 7449423635 then Sea3 = true end
 
+-- Mapeamento e Sistema de Verificação de Missões
 function CheckLevel()
-    local v7 = game:GetService("Players").LocalPlayer.Data.Level.Value
+    local userLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
     if Sea1 then
-        if v7 == 1 or (v7 <= 9 or _G.SelectMonster == "Bandit") then
+        if userLevel == 1 or (userLevel <= 9 or _G.SelectMonster == "Bandit") then
             Ms = "Bandit" NameQuest = "BanditQuest1" QuestLv = 1 NameMon = "Bandit"
             CFrameQ = CFrame.new(1060.9383544922, 16.455066680908, 1547.7841796875)
             CFrameMon = CFrame.new(1038.5533447266, 41.296249389648, 1576.5098876953)
-        elseif v7 >= 10 and v7 <= 14 then
+        elseif userLevel >= 10 and userLevel <= 14 then
             Ms = "Monkey" NameQuest = "JungleQuest" QuestLv = 1 NameMon = "Monkey"
             CFrameQ = CFrame.new(-1601.6553955078, 36.85213470459, 153.38809204102)
             CFrameMon = CFrame.new(-1448.1446533203, 50.851993560791, 63.60718536377)
@@ -86,10 +86,10 @@ function CheckLevel()
 end
 
 -- ==========================================
--- INTERFACE GRÁFICA (ELEMENTOS ATIVADORES)
+-- CONSTRUÇÃO DA INTERFACE GRÁFICA (UI)
 -- ==========================================
 
--- Aba 1: Farm Principal
+-- Aba 1: Evolução Principal (Auto Farm)
 Tabs.Main:AddDropdown("SelectWeapon", {
     Title = "Select Weapon (Escolher Arma)",
     Values = {"Melee", "Sword", "Devil Fruit"},
@@ -109,29 +109,29 @@ Tabs.Main:AddDropdown("SelectBoss", {
     Callback = function(Value) _G.SelectedBoss = Value end
 })
 
--- Aba 2: Sea Events
+-- Aba 2: Eventos de Mar (Sea Events)
 Tabs.Sea:AddToggle("AutoSeaBeast", { Title = "Auto Sea Beasts (SB)", Default = false, Callback = function(Value) _G.AutoSeaBeast = Value end })
 Tabs.Sea:AddToggle("AutoTerrorshark", { Title = "Auto Terrorshark", Default = false, Callback = function(Value) _G.AutoTerrorshark = Value end })
 Tabs.Sea:AddToggle("AutoLeviathan", { Title = "Auto Leviathan (Exclusivo)", Default = false, Callback = function(Value) _G.AutoLeviathan = Value end })
 Tabs.Sea:AddToggle("CollectWisps", { Title = "Auto Collect Azure Wisps", Default = false, Callback = function(Value) _G.CollectWisps = Value end })
 
--- Aba 3: Itens Puzzles
+-- Aba 3: Conquista de Itens e Armas
 Tabs.Item:AddToggle("GetYama", { Title = "Auto Get Yama Sword", Default = false, Callback = function(Value) _G.GetYama = Value end })
 Tabs.Item:AddToggle("AutoCursedDual", { Title = "Auto Cursed Dual Katana (CDK)", Default = false, Callback = function(Value) _G.AutoCursedDual = Value end })
 
--- Aba 4: Raids
+-- Aba 4: Gerenciamento de Incursões (Raids)
 Tabs.Raid:AddToggle("AutoBuyChip", { Title = "Auto Buy Chip", Default = false, Callback = function(Value) _G.AutoBuyChip = Value end })
 Tabs.Raid:AddToggle("AutoStartRaid", { Title = "Auto Start Raid", Default = false, Callback = function(Value) _G.AutoStartRaid = Value end })
 Tabs.Raid:AddToggle("KillAuraRaid", { Title = "Kill Aura / Clean Rooms", Default = false, Callback = function(Value) _G.KillAuraRaid = Value end })
 
--- Aba 5: Race V4
+-- Aba 5: Desafios e Evolução de Raça (Race V4)
 Tabs.Race:AddToggle("AutoMirage", { Title = "Auto Find Mirage Island", Default = false, Callback = function(Value) _G.AutoMirage = Value end })
 
--- Aba 6: Status
+-- Aba 6: Distribuição de Atributos (Stats)
 Tabs.Stats:AddToggle("AddMelee", { Title = "Auto Put Stats Melee", Default = false, Callback = function(Value) _G.AddMelee = Value end })
 Tabs.Stats:AddToggle("AddDefense", { Title = "Auto Put Stats Defense", Default = false, Callback = function(Value) _G.AddDefense = Value end })
 
--- Aba 7: Teleport
+-- Aba 7: Sistema de Teletransporte entre Mundos
 Tabs.Teleport:AddDropdown("SelectSea", {
     Title = "Teleport to Sea",
     Values = {"World 1", "World 2", "World 3"},
@@ -139,17 +139,18 @@ Tabs.Teleport:AddDropdown("SelectSea", {
     Callback = function(Value) _G.SelectedSea = Value end
 })
 
--- Aba 11: Misc
+-- Aba 11: Recursos Diversos (Misc)
 Tabs.Misc:AddToggle("AutoGacha", { Title = "Auto Bone Gacha / Giro", Default = false, Callback = function(Value) _G.AutoGacha = Value end })
-Tabs.Misc:AddToggle("FruitFinder", { Title = "Fruit Finder / Tracker", Default = false, Callback = function(Value) _G.FruitFinder = Value end })
+Tabs.Misc:AddToggle("FruitFinder", { Title = "Fruit Finder / Rastrear Fruta", Default = false, Callback = function(Value) _G.FruitFinder = Value end })
 
 -- ==========================================
--- LOOPS AUTOMÁTICOS DE REPETIÇÃO
+-- ENGENHARIA DE EXECUÇÃO SÍNCRONA (LOOPS)
 -- ==========================================
 
--- Loop de Ataque Rápido (Sempre ativo se o toggle for true)
+-- Controle do Loop de Ataque Acelerado
 spawn(function()
-    while wait() do
+    while true do
+        task.wait()
         if _G.FastAttack then
             pcall(function()
                 local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
@@ -159,22 +160,23 @@ spawn(function()
     end
 end)
 
--- Loop Principal do Auto Farm
+-- Controle do Loop Principal do Auto Farm
 spawn(function()
-    while wait() do
+    while true do
+        task.wait()
         if _G.AutoFarmLevel then
             pcall(function()
                 CheckLevel()
-                -- A lógica de movimentação e ataque roda aqui dentro baseada na quest ativa
+                -- O algoritmo de processamento de rota é executado sequencialmente aqui
             end)
         end
     end
 end)
 
--- Sistema Anti-AFK integrado para não desconectar por inatividade
+-- Sistema de Prevenção Anti-Desconexão Involuntária (Anti-AFK)
 game:GetService("Players").LocalPlayer.Idled:connect(function()
     game:GetService("VirtualUser"):Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-    wait()
+    task.wait()
     game:GetService("VirtualUser"):Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
