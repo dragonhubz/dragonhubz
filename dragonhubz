@@ -1,104 +1,194 @@
--- [[ DRAGON HUB V2.3 - INTERFACE NATIVA ANTI-QUEDA ]] --
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local TitleLabel = Instance.new("TextLabel")
-local Container = Instance.new("Frame")
-local Grid = Instance.new("UIGridLayout")
+import pyautogui
+import keyboard
+import time
+import os
+import random
+import json
+import numpy as np
+from threading import Thread, Event
+import cv2
 
-ScreenGui.Name = "DragonHubGUI"
-ScreenGui.Parent = game:GetService("CoreGui")
-ScreenGui.ResetOnSpawn = false
+# ===== CONFIGURAÇÕES INICIAIS =====
+TEMPO_MIN = 1.5  # Tempo mínimo entre ações
+TEMPO_MAX = 2.2  # Tempo máximo entre ações
+RESOLUCAO = (1920, 1080)  # Resolução da tela do jogo
+DIRETORIO_ALVOS = "targets"
+CONFIG_TECLAS = "configs/keybinds.txt"
+CONFIG_AREAS = "configs/areas.json"
 
--- Janela Principal (Cinza Escuro)
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 400, 0, 250)
-MainFrame.Active = true
-MainFrame.Draggable = true
+# ===== CARREGAR CONFIGURAÇÕES =====
+def carregar_config():
+    config = {
+        "ataque": "e",
+        "bloquear": "h",
+        "fruta": "f",
+        "spawn_espada": "z",
+        "teleporte": "r",
+        "correr": "shift"
+    }
+    try:
+        with open(CONFIG_TECLAS, "r") as f:
+            for linha in f:
+                if "=" in linha:
+                    acao, tecla = linha.strip().split("=")
+                    config[acao] = tecla.lower()
+        with open(CONFIG_AREAS, "r") as f:
+            areas = json.load(f)
+        return config, areas
+    except Exception as e:
+        print(f"Erro ao carregar config: {e}. Usando padrões.")
+        return config, {}
 
--- Título (Laranja)
-TitleLabel.Name = "TitleLabel"
-TitleLabel.Parent = MainFrame
-TitleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-TitleLabel.Size = UDim2.new(1, 0, 0, 40)
-TitleLabel.Font = Enum.Font.SourceSansBold
-TitleLabel.Text = "  Dragon Hub 🐉 - Blox Fruit"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 115, 0)
-TitleLabel.TextSize = 18
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TECLAS, AREAS = carregar_config()
 
--- Container dos Botões
-Container.Name = "Container"
-Container.Parent = MainFrame
-Container.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Container.Position = UDim2.new(0, 10, 0, 50)
-Container.Size = UDim2.new(1, -20, 1, -60)
+# ===== FUNÇÕES AUXILIARES =====
+def tempo_aleatorio():
+    return random.uniform(TEMPO_MIN, TEMPO_MAX)
 
-Grid.Parent = Container
-Grid.CellSize = UDim2.new(0, 180, 0, 40)
-Grid.CellPadding = UDim2.new(0, 10, 0, 10)
+def pressionar(tecla, duracao=0.1):
+    pyautogui.keyDown(tecla)
+    time.sleep(duracao)
+    pyautogui.keyUp(tecla)
 
--- Configurações das Funções
-_G.AutoFarmLevel = false
-_G.FastAttack = false
-_G.BringMob = false
+def arrastar_relativo(x, y, duracao=0.3):
+    pyautogui.moveRel(x, y, duration=duracao)
+    pyautogui.mouseDown(button='left')
+    time.sleep(duracao)
+    pyautogui.mouseUp()
 
-function CheckLevel()
-    local userLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
-    -- Lógica básica de Quest do Banana Cat
-    if userLevel >= 1 then
-        Ms = "Bandit" NameQuest = "BanditQuest1" QuestLv = 1 NameMon = "Bandit"
-    end
-end
+def detectar_imagem(nome_arquivo, tolerancia=0.8, region=None):
+    caminho = os.path.join(DIRETORIO_ALVOS, nome_arquivo)
+    if not os.path.exists(caminho):
+        return None
+    try:
+        pos = pyautogui.locateOnScreen(
+            caminho,
+            confidence=tolerancia,
+            region=region
+        )
+        if pos:
+            return (pos.left + pos.width // 2, pos.top + pos.height // 2)
+    except Exception as e:
+        print(f"Erro ao detectar {nome_arquivo}: {e}")
+    return None
 
--- Criador de Botões Ligar/Desligar
-local function AddToggle(name, globalVar)
-    local Button = Instance.new("TextButton")
-    Button.Parent = Container
-    Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    Button.Font = Enum.Font.SourceSansBold
-    Button.Text = name .. " [OFF]"
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 14
-    
-    Button.MouseButton1Click:Connect(function()
-        _G[globalVar] = not _G[globalVar]
-        if _G[globalVar] then
-            Button.BackgroundColor3 = Color3.fromRGB(255, 115, 0)
-            Button.Text = name .. " [ON]"
-        else
-            Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-            Button.Text = name .. " [OFF]"
-        end
-    end)
-end
+def detectar_cor(x, y, cor, tolerancia=30):
+    try:
+        pixel = pyautogui.pixel(x, y)
+        return all(abs(p - c) <= tolerancia for p, c in zip(pixel, cor))
+    except:
+        return False
 
--- Adicionando as Funções Principais na Tela
-AddToggle("Auto Farm Level", "AutoFarmLevel")
-AddToggle("Fast Attack", "FastAttack")
-AddToggle("Bring Mob", "BringMob")
+# ===== GERENCIAMENTO DE VIDA E MANA =====
+def verificar_barra_vida(pixel_y=60):
+    return detectar_cor(100, pixel_y, (60, 200, 60), tolerancia=50)
 
--- Loops de Funcionamento
-spawn(function()
-    while true do
-        task.wait()
-        if _G.FastAttack then
-            pcall(function()
-                local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
-                CombatFramework.activeController.attackInterval = 0
-            end)
-        end
-    end
-end)
+def verificar_barra_mana(pixel_y=80):
+    return detectar_cor(100, pixel_y, (60, 100, 220), tolerancia=50)
 
-spawn(function()
-    while true do
-        task.wait()
-        if _G.AutoFarmLevel then
-            pcall(function() CheckLevel() end)
-        end
-    end
-end)
+def usar_fruta_se_necessario():
+    if verificar_barra_vida():
+        print("Vida baixa! Usando fruta de cura...")
+        pressionar(TECLAS["fruta"], duracao=0.3)
+        time.sleep(tempo_aleatorio())
+    if verificar_barra_mana():
+        print("Mana baixa! Esperando recuperação...")
+        time.sleep(5 + random.uniform(0, 2))
+
+# ===== AÇÕES DO BOT =====
+def auto_spawn_espadas():
+    while running.is_set():
+        pressionar(TECLAS["spawn_espada"], duracao=0.5)
+        time.sleep(tempo_aleatorio())
+        arrastar_relativo(-50, 0)
+
+def auto_cdk():
+    while running.is_set():
+        pressionar(TECLAS["ataque"], duracao=0.3)
+        time.sleep(0.2)
+        pressionar(TECLAS["ataque"], duracao=0.3)
+        time.sleep(tempo_aleatorio())
+
+def auto_spam_ataques():
+    while running.is_set():
+        usar_fruta_se_necessario()
+        pos_inimigo = detectar_imagem("inimigo.png")
+        if pos_inimigo:
+            pyautogui.moveTo(pos_inimigo)
+            pressionar(TECLAS["ataque"], duracao=0.4)
+            time.sleep(tempo_aleatorio())
+            pressionar(TECLAS["bloquear"], duracao=0.2)
+            time.sleep(tempo_aleatorio())
+        else:
+            arrastar_relativo(100, 0)
+            time.sleep(1)
+
+def auto_esferas():
+    while running.is_set():
+        esfera_amarela = detectar_imagem("esfera_amarela.png")
+        esfera_azul = detectar_imagem("esfera_azul.png")
+        if esfera_amarela or esfera_azul:
+            print("Esfera detectada! Coletando...")
+            for _ in range(5):
+                pressionar(TECLAS["fruta"], duracao=0.2)
+                time.sleep(tempo_aleatorio())
+            time.sleep(tempo_aleatorio())
+        else:
+            time.sleep(1)
+
+def auto_teleporte_morte():
+    while running.is_set():
+        if detectar_imagem("spawn_morte.png", tolerancia=0.7):
+            print("Detectado spawn de morte! Teleportando...")
+            pressionar(TECLAS["teleporte"], duracao=1.0)
+            time.sleep(3 + tempo_aleatorio())
+            return
+        time.sleep(1)
+
+# ===== CONTROLE DO BOT =====
+running = Event()
+running.set()
+
+def iniciar_bot():
+    global running
+    running.set()
+    print("\n=== BOT INICIADO ===")
+    print("Pressione F12 para PAUSAR/RETOMAR o bot.")
+    print("Pressione ESC para PARAR completamente.")
+
+    Thread(target=auto_spawn_espadas, daemon=True).start()
+    Thread(target=auto_cdk, daemon=True).start()
+    Thread(target=auto_spam_ataques, daemon=True).start()
+    Thread(target=auto_esferas, daemon=True).start()
+    Thread(target=auto_teleporte_morte, daemon=True).start()
+
+def pausar_bot():
+    running.clear()
+    print("\n=== BOT PAUSADO ===")
+
+def retomar_bot():
+    running.set()
+    print("\n=== BOT RETOMADO ===")
+
+def parar_bot():
+    running.clear()
+    print("\n=== BOT PARADO ===")
+    exit()
+
+if __name__ == "__main__":
+    pyautogui.FAILSAFE = False
+    print("\n=== BLOX FRUITS ULTRA BOT (2026) ===")
+    print("Pressione F12 para PAUSAR/RETOMAR ou ESC para PARAR.")
+
+    iniciar_bot()
+
+    while True:
+        if keyboard.is_pressed('F12'):
+            if running.is_set():
+                pausar_bot()
+            else:
+                retomar_bot()
+            time.sleep(1)
+        if keyboard.is_pressed('ESC'):
+            parar_bot()
+        time.sleep(0.1)
